@@ -1,0 +1,19 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: kinetic
+      POSTGRES_USER: kinetic
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:?Set DATABASE_PASSWORD in backend/.env}
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kinetic -d kinetic"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    volumes:
+      - kinetic-postgres-data:/var/lib/postgresql/data
+
+volumes:
+  kinetic-postgres-data:

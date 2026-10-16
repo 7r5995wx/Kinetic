@@ -1,0 +1,30 @@
+#!/bin/sh
+set -eu
+
+BASE_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+PROPERTIES_FILE="$BASE_DIR/.mvn/wrapper/maven-wrapper.properties"
+MAVEN_USER_HOME=${MAVEN_USER_HOME:-"$HOME/.m2"}
+WRAPPER_DIR="$MAVEN_USER_HOME/wrapper/dists"
+
+distribution_url=$(sed -n 's/^distributionUrl=//p' "$PROPERTIES_FILE")
+expected_sha=$(sed -n 's/^distributionSha512Sum=//p' "$PROPERTIES_FILE")
+archive_name=$(basename "$distribution_url")
+maven_dir=${archive_name%-bin.zip}
+archive_dir="$WRAPPER_DIR/$maven_dir"
+archive_path="$archive_dir/$archive_name"
+
+if [ ! -x "$archive_dir/$maven_dir/bin/mvn" ]; then
+  mkdir -p "$archive_dir"
+  if [ ! -f "$archive_path" ]; then
+    curl --fail --location --silent --show-error "$distribution_url" --output "$archive_path"
+  fi
+  actual_sha=$(shasum -a 512 "$archive_path" | awk '{print $1}')
+  if [ "$actual_sha" != "$expected_sha" ]; then
+    rm -f "$archive_path"
+    echo "Maven distribution checksum verification failed" >&2
+    exit 1
+  fi
+  unzip -q "$archive_path" -d "$archive_dir"
+fi
+
+exec "$archive_dir/$maven_dir/bin/mvn" "$@"
