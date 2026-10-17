@@ -5,7 +5,7 @@ import { ToastProvider } from "@/components/ui/toast";
 import { AuthProvider } from "@/lib/auth/auth-context";
 
 export const metadata: Metadata = {
-  title: "Kinetic — Move work forward, together.",
+  title: "Kinetic: Move work forward, together.",
   description:
     "Kinetic is a collaborative project-management SaaS featuring real-time Kanban boards, role-based workspace permissions, and audit trails.",
   icons: {

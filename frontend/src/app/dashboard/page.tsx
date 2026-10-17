@@ -108,11 +108,11 @@ export default function DashboardPage() {
         {/* Header section with actions */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b pb-5">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
-              Workspaces & Dashboard
+            <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground">
+              Workspaces
             </h1>
             <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-              Select a workspace to manage its projects, boards, and team members.
+              Select or create a workspace to manage projects, Kanban boards, and team access.
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -232,18 +232,6 @@ export default function DashboardPage() {
               ))}
             </div>
           )}
-        </div>
-
-        {/* System Architecture & Foundation Status */}
-        <div className="rounded-lg border bg-muted/30 p-4 text-xs text-muted-foreground space-y-2">
-          <div className="flex items-center gap-2 font-medium text-foreground">
-            <Shield className="h-4 w-4 text-primary" />
-            <span>Kinetic API Connected</span>
-          </div>
-          <p className="leading-relaxed">
-            All workspace and project state is persisted directly in PostgreSQL via the
-            Spring Boot backend at <code>http://localhost:8080/api/v1</code>.
-          </p>
         </div>
       </div>
 

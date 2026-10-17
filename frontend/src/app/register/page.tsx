@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Sparkles, ArrowRight, Lock, Mail, User, ShieldCheck } from "lucide-react";
+import { ArrowRight, Lock, Mail, User, ShieldCheck, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,6 +16,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { KineticLogo } from "@/components/ui/kinetic-logo";
 import { useAuth } from "@/lib/auth/auth-context";
 import { ApiError } from "@/lib/api/client";
 
@@ -23,6 +24,7 @@ export default function RegisterPage() {
   const [displayName, setDisplayName] = React.useState("");
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
+  const [showPassword, setShowPassword] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = React.useState<Record<string, string>>({});
   const [loading, setLoading] = React.useState(false);
@@ -83,18 +85,18 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-muted/20 px-4 py-12">
-      <div className="w-full max-w-md space-y-6">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4 py-12">
+      <div className="w-full max-w-sm space-y-6">
         {/* Brand header */}
         <div className="text-center space-y-2">
           <Link
             href="/"
-            className="inline-flex items-center gap-2 group focus:outline-none"
+            className="inline-flex items-center gap-2.5 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md"
           >
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-md group-hover:scale-105 transition-transform">
-              <Sparkles className="h-5 w-5" />
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-foreground text-background shadow-xs group-hover:scale-105 transition-transform">
+              <KineticLogo className="h-4 w-4 text-background" size={16} />
             </div>
-            <span className="text-2xl font-bold tracking-tight text-foreground">
+            <span className="text-xl font-semibold tracking-tight text-foreground">
               Kinetic
             </span>
           </Link>
@@ -104,9 +106,9 @@ export default function RegisterPage() {
         </div>
 
         {/* Register Card */}
-        <Card className="border shadow-md">
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-xl font-bold tracking-tight">
+        <Card className="border border-border/80 shadow-sm bg-card">
+          <CardHeader className="space-y-1 pb-4">
+            <CardTitle className="text-lg font-semibold tracking-tight">
               Create your account
             </CardTitle>
             <CardDescription className="text-xs">
@@ -118,12 +120,12 @@ export default function RegisterPage() {
             <CardContent className="space-y-4">
               {error && (
                 <Alert variant="destructive">
-                  <AlertDescription>{error}</AlertDescription>
+                  <AlertDescription className="text-xs">{error}</AlertDescription>
                 </Alert>
               )}
 
               <div className="space-y-1.5">
-                <Label htmlFor="displayName">Full name</Label>
+                <Label htmlFor="displayName" className="text-xs font-medium">Full name</Label>
                 <div className="relative">
                   <User className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -136,7 +138,7 @@ export default function RegisterPage() {
                     maxLength={100}
                     disabled={loading}
                     error={Boolean(fieldErrors.displayName)}
-                    className="pl-9"
+                    className="pl-9 h-9 text-xs"
                   />
                 </div>
                 {fieldErrors.displayName && (
@@ -147,7 +149,7 @@ export default function RegisterPage() {
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="email">Email address</Label>
+                <Label htmlFor="email" className="text-xs font-medium">Email address</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -161,7 +163,7 @@ export default function RegisterPage() {
                     autoComplete="email"
                     disabled={loading}
                     error={Boolean(fieldErrors.email)}
-                    className="pl-9"
+                    className="pl-9 h-9 text-xs"
                   />
                 </div>
                 {fieldErrors.email && (
@@ -170,12 +172,12 @@ export default function RegisterPage() {
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="password">Password (12–72 characters)</Label>
+                <Label htmlFor="password" className="text-xs font-medium">Password (12 to 72 characters)</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="password"
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     placeholder="At least 12 characters"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -185,31 +187,43 @@ export default function RegisterPage() {
                     autoComplete="new-password"
                     disabled={loading}
                     error={Boolean(fieldErrors.password)}
-                    className="pl-9"
+                    className="pl-9 pr-9 h-9 text-xs"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-2.5 top-2.5 text-muted-foreground hover:text-foreground transition-colors"
+                    aria-label={showPassword ? "Hide" : "Show"}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
                 </div>
                 {fieldErrors.password && (
                   <p className="text-[11px] text-destructive">
                     {fieldErrors.password}
                   </p>
                 )}
-                <p className="text-[11px] text-muted-foreground">
-                  Kinetic enforces strong passwords hashed with BCrypt strength 12.
+                <p className="text-[10px] text-muted-foreground">
+                  Hashed with BCrypt strength 12 with automatic session rotation.
                 </p>
               </div>
             </CardContent>
 
-            <CardFooter className="flex flex-col space-y-4">
-              <Button type="submit" className="w-full" isLoading={loading}>
+            <CardFooter className="flex flex-col space-y-4 pt-2">
+              <Button type="submit" className="w-full h-9 text-xs font-medium" isLoading={loading}>
                 Create Account
-                <ArrowRight className="ml-2 h-4 w-4" />
+                <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
               </Button>
 
               <div className="text-center text-xs text-muted-foreground">
                 Already have an account?{" "}
                 <Link
                   href="/login"
-                  className="font-medium text-primary hover:underline underline-offset-4"
+                  className="font-medium text-foreground underline underline-offset-4 hover:text-primary transition-colors"
                 >
                   Sign in
                 </Link>
@@ -219,9 +233,9 @@ export default function RegisterPage() {
         </Card>
 
         {/* Security Info */}
-        <div className="flex items-center justify-center gap-2 text-[11px] text-muted-foreground/80">
+        <div className="flex items-center justify-center gap-2 text-[11px] text-muted-foreground">
           <ShieldCheck className="h-3.5 w-3.5 text-primary" />
-          <span>Session rotation & CSRF protection enabled.</span>
+          <span>Session rotation and CSRF protection enabled.</span>
         </div>
       </div>
     </div>

@@ -258,7 +258,7 @@ export default function ProjectOverviewPage({
                     Created:{" "}
                     {project?.createdAt
                       ? new Date(project.createdAt).toLocaleString()
-                      : "—"}
+                      : "Not available"}
                   </span>
                 </div>
               </div>

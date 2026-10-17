@@ -11,8 +11,8 @@ import {
   Activity,
   Layers,
   X,
-  Sparkles,
 } from "lucide-react";
+import { KineticLogo } from "@/components/ui/kinetic-logo";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { WorkspaceSwitcher } from "@/components/shell/workspace-switcher";
@@ -73,7 +73,7 @@ export function Sidebar({
   return (
     <aside
       className={cn(
-        "flex h-full flex-col justify-between border-r bg-card/60 backdrop-blur-md px-3 py-4",
+        "flex h-full flex-col justify-between border-r border-border/80 bg-card/80 backdrop-blur-md px-3 py-4",
         className
       )}
     >
@@ -82,13 +82,13 @@ export function Sidebar({
         <div className="flex items-center justify-between px-2">
           <Link
             href="/dashboard"
-            className="flex items-center gap-2 group focus:outline-none"
+            className="flex items-center gap-2.5 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md"
           >
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm group-hover:scale-105 transition-transform">
-              <Sparkles className="h-4 w-4" />
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-foreground text-background shadow-xs group-hover:scale-105 transition-transform">
+              <KineticLogo className="h-3.5 w-3.5 text-background" size={14} />
             </div>
             <div>
-              <span className="font-bold text-sm tracking-tight text-foreground block">
+              <span className="font-semibold text-sm tracking-tight text-foreground block">
                 Kinetic
               </span>
               <span className="text-[10px] text-muted-foreground block -mt-0.5">
@@ -131,10 +131,10 @@ export function Sidebar({
                   href={item.href}
                   onClick={onCloseMobileMenu}
                   className={cn(
-                    "group flex items-center gap-3 rounded-md px-3 py-2 text-xs font-medium transition-colors",
+                    "group flex items-center gap-3 rounded-lg px-3 py-2 text-xs font-medium transition-colors",
                     item.current
-                      ? "bg-primary/10 text-primary font-semibold"
-                      : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                      ? "bg-secondary text-foreground font-semibold shadow-2xs"
+                      : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
                   )}
                 >
                   <Icon
@@ -153,14 +153,14 @@ export function Sidebar({
       </div>
 
       {/* Footer info */}
-      <div className="border-t border-border/60 pt-3 px-2 space-y-2">
+      <div className="border-t border-border/70 pt-3 px-2 space-y-2">
         <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-          <Activity className="h-3.5 w-3.5 text-primary/70 shrink-0" />
-          <span className="truncate">Connected to Kinetic API</span>
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+          <span className="truncate">Kinetic Platform</span>
         </div>
-        <div className="text-[10px] text-muted-foreground/60 flex items-center justify-between">
+        <div className="text-[10px] text-muted-foreground/70 flex items-center justify-between font-mono">
           <span>v1.0.0</span>
-          <span>Spring Boot Session Auth</span>
+          <span>Session Auth</span>
         </div>
       </div>
     </aside>

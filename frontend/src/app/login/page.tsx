@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Sparkles, ArrowRight, Lock, Mail } from "lucide-react";
+import { ArrowRight, Lock, Mail, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,12 +16,14 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { KineticLogo } from "@/components/ui/kinetic-logo";
 import { useAuth } from "@/lib/auth/auth-context";
 import { ApiError } from "@/lib/api/client";
 
 export default function LoginPage() {
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
+  const [showPassword, setShowPassword] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = React.useState<Record<string, string>>({});
   const [loading, setLoading] = React.useState(false);
@@ -75,18 +77,18 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-muted/20 px-4 py-12">
-      <div className="w-full max-w-md space-y-6">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4 py-12">
+      <div className="w-full max-w-sm space-y-6">
         {/* Brand header */}
         <div className="text-center space-y-2">
           <Link
             href="/"
-            className="inline-flex items-center gap-2 group focus:outline-none"
+            className="inline-flex items-center gap-2.5 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md"
           >
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-md group-hover:scale-105 transition-transform">
-              <Sparkles className="h-5 w-5" />
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-foreground text-background shadow-xs group-hover:scale-105 transition-transform">
+              <KineticLogo className="h-4 w-4 text-background" size={16} />
             </div>
-            <span className="text-2xl font-bold tracking-tight text-foreground">
+            <span className="text-xl font-semibold tracking-tight text-foreground">
               Kinetic
             </span>
           </Link>
@@ -96,9 +98,9 @@ export default function LoginPage() {
         </div>
 
         {/* Login Card */}
-        <Card className="border shadow-md">
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-xl font-bold tracking-tight">
+        <Card className="border border-border/80 shadow-sm bg-card">
+          <CardHeader className="space-y-1 pb-4">
+            <CardTitle className="text-lg font-semibold tracking-tight">
               Sign in to your account
             </CardTitle>
             <CardDescription className="text-xs">
@@ -110,12 +112,12 @@ export default function LoginPage() {
             <CardContent className="space-y-4">
               {error && (
                 <Alert variant="destructive">
-                  <AlertDescription>{error}</AlertDescription>
+                  <AlertDescription className="text-xs">{error}</AlertDescription>
                 </Alert>
               )}
 
               <div className="space-y-1.5">
-                <Label htmlFor="email">Email address</Label>
+                <Label htmlFor="email" className="text-xs font-medium">Email address</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -128,7 +130,7 @@ export default function LoginPage() {
                     autoComplete="email"
                     disabled={loading}
                     error={Boolean(fieldErrors.email)}
-                    className="pl-9"
+                    className="pl-9 h-9 text-xs"
                   />
                 </div>
                 {fieldErrors.email && (
@@ -137,12 +139,12 @@ export default function LoginPage() {
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password" className="text-xs font-medium">Password</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="password"
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     placeholder="••••••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -150,8 +152,20 @@ export default function LoginPage() {
                     autoComplete="current-password"
                     disabled={loading}
                     error={Boolean(fieldErrors.password)}
-                    className="pl-9"
+                    className="pl-9 pr-9 h-9 text-xs"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-2.5 top-2.5 text-muted-foreground hover:text-foreground transition-colors"
+                    aria-label={showPassword ? "Hide" : "Show"}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
                 </div>
                 {fieldErrors.password && (
                   <p className="text-[11px] text-destructive">
@@ -161,28 +175,28 @@ export default function LoginPage() {
               </div>
             </CardContent>
 
-            <CardFooter className="flex flex-col space-y-4">
-              <Button type="submit" className="w-full" isLoading={loading}>
+            <CardFooter className="flex flex-col space-y-4 pt-2">
+              <Button type="submit" className="w-full h-9 text-xs font-medium" isLoading={loading}>
                 Sign In
-                <ArrowRight className="ml-2 h-4 w-4" />
+                <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
               </Button>
 
               <div className="text-center text-xs text-muted-foreground">
                 Don&apos;t have an account?{" "}
                 <Link
                   href="/register"
-                  className="font-medium text-primary hover:underline underline-offset-4"
+                  className="font-medium text-foreground underline underline-offset-4 hover:text-primary transition-colors"
                 >
-                  Create one now
+                  Create an account
                 </Link>
               </div>
             </CardFooter>
           </form>
         </Card>
 
-        {/* Safety Note */}
-        <p className="text-center text-[11px] text-muted-foreground/80">
-          Secured with HttpOnly server sessions and CSRF token verification.
+        {/* Security Note */}
+        <p className="text-center text-[11px] text-muted-foreground">
+          Secured with HttpOnly server sessions and CSRF token protection.
         </p>
       </div>
     </div>
