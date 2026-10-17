@@ -2,7 +2,7 @@
 
 > "Move work forward, together."
 
-Kinetic is a production-grade, full-stack collaborative project management platform built as a clean modular monolith. It brings engineering teams together with real-time Kanban boards, multi-tenant workspaces, role-based authorization, optimistic concurrency control, and audit trails.
+Kinetic is a full-stack collaborative project management platform built as a clean modular monolith. It brings engineering teams together with real-time Kanban boards, multi-tenant workspaces, role-based authorization, and optimistic concurrency control.
 
 [![Kinetic CI](https://github.com/7r5995wx/Kinetic/actions/workflows/ci.yml/badge.svg)](https://github.com/7r5995wx/Kinetic/actions/workflows/ci.yml)
 ![Java 21](https://img.shields.io/badge/Java-21%20LTS-007396?logo=openjdk&logoColor=white)
@@ -52,7 +52,7 @@ Session-based authentication interface with BCrypt password hashing, automatic s
 - **Secure Cookie Configuration**: Deployed session cookies enforce `HttpOnly`, `Secure`, and `SameSite=Lax`.
 
 ### Multi-Tenant Workspaces and Role-Based Access Control (RBAC)
-- **Tenant Isolation**: All projects, columns, tasks, and activities are strictly scoped to a parent workspace.
+- **Tenant Isolation**: All projects, columns, and tasks are strictly scoped to a parent workspace.
 - **Role Hierarchy**: Enforces `OWNER`, `ADMIN`, and `MEMBER` roles at the service layer on every query and mutation.
 - **Sole-Owner Safety Guard**: Workspaces prevent removing or demoting the last remaining owner, protecting against orphaned resources.
 - **Parent-Child Hierarchy Validation**: Deep entity checks ensure columns, tasks, and projects belong to the requested workspace before mutation, preventing ID tampering.
@@ -303,14 +303,17 @@ Every commit and pull request to `main` triggers automated GitHub Actions jobs:
 
 ## 10. Roadmap
 
+### Completed Milestones
 - [x] Multi-tenant workspace and project management
 - [x] Real-time STOMP Kanban board synchronization
 - [x] Optimistic locking with automatic conflict resolution prompts
 - [x] Same-origin Next.js proxy for strict cookie privacy compliance
+
+### Planned Engineering Milestones
 - [ ] Task comments with markdown preview support
 - [ ] Workspace audit activity stream and export
 - [ ] Redis-backed STOMP relay for multi-instance horizontal scaling
-- [ ] User avatars and workspace branding customization
+- [ ] Custom user avatars and workspace branding customization
 
 ---
 
