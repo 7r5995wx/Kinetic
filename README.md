@@ -252,7 +252,7 @@ Kinetic is deployed on cloud infrastructure using provider-managed environments:
 The codebase enforces strict test coverage across frontend and backend layers:
 
 ### Backend Testing (JUnit 5 & Spring Boot Test)
-- **63 tests passing** (0 failures, 0 errors).
+- **69 tests passing** (0 failures, 0 errors).
 - Covers REST API contracts, service-level authorization, sole-owner safety logic, Flyway migrations, and STOMP security interceptors.
 - CI executes all tests against a dedicated PostgreSQL 17 container using Testcontainers.
 
@@ -266,8 +266,8 @@ cd backend
 ```
 
 ### Frontend Testing (Vitest & React Testing Library)
-- **54 tests passing** across 16 test suites (0 failures).
-- Covers authentication flows, registration validation, board manipulation, optimistic concurrency conflict handling, STOMP reconnect logic, and UI components.
+- **65 tests passing** across 18 test suites (0 failures).
+- Covers authentication flows, registration validation, board manipulation, optimistic concurrency conflict handling, STOMP reconnect logic, safe Markdown rendering, task comments, and UI components.
 - Zero TypeScript compiler errors (`tsc --noEmit`).
 - Zero ESLint errors or warnings (`next lint`).
 
@@ -308,9 +308,9 @@ Every commit and pull request to `main` triggers automated GitHub Actions jobs:
 - [x] Real-time STOMP Kanban board synchronization
 - [x] Optimistic locking with automatic conflict resolution prompts
 - [x] Same-origin Next.js proxy for strict cookie privacy compliance
+- [x] Task comments with safe Markdown preview and real-time thread synchronization
 
 ### Planned Engineering Milestones
-- [ ] Task comments with markdown preview support
 - [ ] Workspace audit activity stream and export
 - [ ] Redis-backed STOMP relay for multi-instance horizontal scaling
 - [ ] Custom user avatars and workspace branding customization

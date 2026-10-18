@@ -19,6 +19,8 @@ import {
   TaskCreateRequest,
   TaskUpdateRequest,
   TaskMoveRequest,
+  CommentView,
+  CommentCreateRequest,
 } from "@/types/api";
 
 export function getApiBaseUrl(): string {
@@ -253,6 +255,22 @@ export const taskApi = {
     apiClient<TaskView>(`/tasks/${id}/move`, { method: "POST", body: data }),
   delete: (id: string, version: number) =>
     apiClient<void>(`/tasks/${id}?version=${version}`, {
+      method: "DELETE",
+    }),
+};
+
+export const commentApi = {
+  list: (taskId: string, page = 0, size = 50) =>
+    apiClient<PageResponse<CommentView>>(
+      `/tasks/${taskId}/comments?page=${page}&size=${size}`
+    ),
+  create: (taskId: string, data: CommentCreateRequest) =>
+    apiClient<CommentView>(`/tasks/${taskId}/comments`, {
+      method: "POST",
+      body: data,
+    }),
+  delete: (id: string) =>
+    apiClient<void>(`/comments/${id}`, {
       method: "DELETE",
     }),
 };

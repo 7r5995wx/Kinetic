@@ -14,6 +14,10 @@ import {
   RefreshCw,
   AlertTriangle,
   User,
+  MessageSquare,
+  Send,
+  Eye,
+  Edit3,
 } from "lucide-react";
 import { AppShell } from "@/components/shell/app-shell";
 import { Button } from "@/components/ui/button";
@@ -44,8 +48,17 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { SafeMarkdown } from "@/components/ui/safe-markdown";
 import { useToast } from "@/components/ui/toast";
-import { taskApi, projectApi, workspaceApi, ApiError } from "@/lib/api/client";
+import { useAuth } from "@/lib/auth/auth-context";
+import {
+  taskApi,
+  projectApi,
+  workspaceApi,
+  commentApi,
+  ApiError,
+} from "@/lib/api/client";
 import { useProjectRealtime } from "@/lib/realtime/use-project-realtime";
 import {
   KanbanColumnView,
@@ -53,6 +66,7 @@ import {
   TaskPriority,
   TaskView,
   WorkspaceMemberView,
+  CommentView,
 } from "@/types/api";
 
 export default function TaskDetailPage({
@@ -76,12 +90,33 @@ export default function TaskDetailPage({
   const [dueDate, setDueDate] = React.useState("");
   const [saveLoading, setSaveLoading] = React.useState(false);
 
+  // Comments State
+  const { user } = useAuth();
+  const [comments, setComments] = React.useState<CommentView[]>([]);
+  const [commentsLoading, setCommentsLoading] = React.useState(true);
+  const [commentText, setCommentText] = React.useState("");
+  const [composerMode, setComposerMode] = React.useState<"write" | "preview">("write");
+  const [commentSubmitting, setCommentSubmitting] = React.useState(false);
+  const [commentToDelete, setCommentToDelete] = React.useState<CommentView | null>(null);
+  const [deleteCommentLoading, setDeleteCommentLoading] = React.useState(false);
+
   // Delete Confirmation Dialog
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
   const [deleteLoading, setDeleteLoading] = React.useState(false);
 
   const router = useRouter();
   const { toast } = useToast();
+
+  const loadComments = React.useCallback(async () => {
+    try {
+      const page = await commentApi.list(params.taskId, 0, 50);
+      setComments(page.items);
+    } catch (err) {
+      console.error("Failed to fetch comments:", err);
+    } finally {
+      setCommentsLoading(false);
+    }
+  }, [params.taskId]);
 
   const loadData = React.useCallback(async () => {
     setLoading(true);
@@ -115,10 +150,16 @@ export default function TaskDetailPage({
 
   React.useEffect(() => {
     loadData();
-  }, [loadData]);
+    loadComments();
+  }, [loadData, loadComments]);
 
   const handleRealtimeEvent = React.useCallback(
     (event: RealtimeEvent) => {
+      if (event.type === "comment.created" || event.type === "comment.deleted") {
+        loadComments();
+        return;
+      }
+
       if (event.resourceId !== params.taskId) return;
 
       if (event.type === "task.deleted") {
@@ -142,14 +183,100 @@ export default function TaskDetailPage({
         loadData();
       }
     },
-    [params.taskId, params.workspaceId, params.projectId, task, router, toast, loadData]
+    [params.taskId, params.workspaceId, params.projectId, task, router, toast, loadData, loadComments]
   );
 
   const { status: realtimeStatus } = useProjectRealtime({
     projectId: params.projectId,
     onTaskEvent: handleRealtimeEvent,
-    onReconnect: loadData,
+    onReconnect: () => {
+      loadData();
+      loadComments();
+    },
   });
+
+  const handleCreateComment = async (e: React.FormEvent | React.MouseEvent) => {
+    e.preventDefault();
+    const trimmed = commentText.trim();
+    if (!trimmed || commentSubmitting) return;
+
+    if (trimmed.length > 5000) {
+      toast({
+        title: "Comment too long",
+        description: "Comments must not exceed 5000 characters.",
+        type: "error",
+      });
+      return;
+    }
+
+    setCommentSubmitting(true);
+    try {
+      const created = await commentApi.create(params.taskId, { content: trimmed });
+      setComments((prev) => [...prev, created]);
+      setCommentText("");
+      setComposerMode("write");
+      toast({
+        title: "Comment posted",
+        description: "Your comment was added to the discussion.",
+        type: "success",
+      });
+    } catch (err) {
+      if (err instanceof ApiError) {
+        toast({
+          title: "Failed to post comment",
+          description: err.message,
+          type: "error",
+        });
+      } else {
+        toast({
+          title: "Failed to post comment",
+          description: "An unexpected error occurred.",
+          type: "error",
+        });
+      }
+    } finally {
+      setCommentSubmitting(false);
+    }
+  };
+
+  const handleDeleteComment = async () => {
+    if (!commentToDelete) return;
+
+    setDeleteCommentLoading(true);
+    try {
+      await commentApi.delete(commentToDelete.id);
+      setComments((prev) => prev.filter((c) => c.id !== commentToDelete.id));
+      toast({
+        title: "Comment deleted",
+        description: "The comment was successfully removed.",
+        type: "info",
+      });
+      setCommentToDelete(null);
+    } catch (err) {
+      if (err instanceof ApiError) {
+        toast({
+          title: "Delete failed",
+          description: err.message,
+          type: "error",
+        });
+      } else {
+        toast({
+          title: "Delete failed",
+          description: "Could not delete comment.",
+          type: "error",
+        });
+      }
+    } finally {
+      setDeleteCommentLoading(false);
+    }
+  };
+
+  const currentMember = members.find((m) => m.userId === user?.id);
+  const canDeleteComment = (c: CommentView) => {
+    if (!user) return false;
+    if (c.authorId === user.id) return true;
+    return currentMember?.role === "OWNER" || currentMember?.role === "ADMIN";
+  };
 
   const handleSaveChanges = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -404,6 +531,168 @@ export default function TaskDetailPage({
                   </CardContent>
                 </Card>
 
+                {/* Discussion & Comments */}
+                <Card>
+                  <CardHeader className="pb-3 border-b">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <MessageSquare className="h-4 w-4 text-muted-foreground" />
+                        <CardTitle className="text-base font-semibold">Discussion</CardTitle>
+                        <Badge variant="secondary" className="text-xs px-2 py-0 font-normal">
+                          {comments.length}
+                        </Badge>
+                      </div>
+                      <span className="text-xs text-muted-foreground">
+                        Markdown supported
+                      </span>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-6 space-y-6">
+                    {/* Comments List */}
+                    {commentsLoading ? (
+                      <div className="space-y-4">
+                        <Skeleton className="h-20 w-full rounded-lg" />
+                        <Skeleton className="h-20 w-full rounded-lg" />
+                      </div>
+                    ) : comments.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-8 text-center">
+                        <MessageSquare className="h-8 w-8 text-muted-foreground/50 mb-2" />
+                        <p className="text-sm font-medium text-foreground">No comments yet</p>
+                        <p className="text-xs text-muted-foreground max-w-sm mt-0.5">
+                          Share updates, implementation notes, or questions with your workspace team.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {comments.map((comment) => {
+                          const initials = comment.authorName
+                            ? comment.authorName
+                                .split(" ")
+                                .map((n) => n[0])
+                                .join("")
+                                .substring(0, 2)
+                                .toUpperCase()
+                            : "U";
+                          const formattedDate = new Date(comment.createdAt).toLocaleString(undefined, {
+                            dateStyle: "medium",
+                            timeStyle: "short",
+                          });
+
+                          return (
+                            <div
+                              key={comment.id}
+                              className="rounded-lg border bg-card p-4 transition-colors space-y-3"
+                            >
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2.5">
+                                  <Avatar className="h-7 w-7 text-[11px]">
+                                    <AvatarFallback>{initials}</AvatarFallback>
+                                  </Avatar>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-xs font-semibold text-foreground">
+                                      {comment.authorName}
+                                    </span>
+                                    <span className="text-[11px] text-muted-foreground">
+                                      {formattedDate}
+                                    </span>
+                                  </div>
+                                </div>
+
+                                {canDeleteComment(comment) && (
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
+                                    onClick={() => setCommentToDelete(comment)}
+                                    aria-label={`Delete comment by ${comment.authorName}`}
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  </Button>
+                                )}
+                              </div>
+
+                              <div className="text-sm pl-9">
+                                <SafeMarkdown content={comment.content} />
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {/* Comment Composer */}
+                    <div className="rounded-lg border bg-muted/20 p-4 space-y-3">
+                      <div className="flex items-center justify-between border-b pb-2">
+                        <div className="flex items-center gap-1">
+                          <Button
+                            type="button"
+                            variant={composerMode === "write" ? "secondary" : "ghost"}
+                            size="sm"
+                            className="h-7 text-xs px-2.5"
+                            onClick={() => setComposerMode("write")}
+                          >
+                            <Edit3 className="mr-1.5 h-3 w-3" />
+                            Write
+                          </Button>
+                          <Button
+                            type="button"
+                            variant={composerMode === "preview" ? "secondary" : "ghost"}
+                            size="sm"
+                            className="h-7 text-xs px-2.5"
+                            onClick={() => setComposerMode("preview")}
+                          >
+                            <Eye className="mr-1.5 h-3 w-3" />
+                            Preview
+                          </Button>
+                        </div>
+                        <span className="text-[11px] text-muted-foreground font-mono">
+                          {commentText.length} / 5000
+                        </span>
+                      </div>
+
+                      {composerMode === "write" ? (
+                        <textarea
+                          rows={3}
+                          value={commentText}
+                          onChange={(e) => setCommentText(e.target.value)}
+                          maxLength={5000}
+                          disabled={commentSubmitting}
+                          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
+                          placeholder="Leave a comment... Supports **bold**, *italic*, `code`, and [links](https://...)"
+                        />
+                      ) : (
+                        <div className="min-h-[76px] rounded-md border border-dashed bg-background/50 p-3 text-sm">
+                          {commentText.trim() ? (
+                            <SafeMarkdown content={commentText} />
+                          ) : (
+                            <span className="text-xs italic text-muted-foreground">
+                              Nothing to preview yet. Switch back to Write and type something.
+                            </span>
+                          )}
+                        </div>
+                      )}
+
+                      <div className="flex items-center justify-between pt-1">
+                        <span className="text-[11px] text-muted-foreground hidden sm:inline">
+                          Styling tips: **bold**, *italic*, `code`, &gt; quote
+                        </span>
+                        <Button
+                          type="button"
+                          size="sm"
+                          onClick={handleCreateComment}
+                          isLoading={commentSubmitting}
+                          disabled={!commentText.trim() || commentSubmitting}
+                          className="ml-auto"
+                        >
+                          <Send className="mr-1.5 h-3.5 w-3.5" />
+                          Comment
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
                 {/* Audit Information */}
                 <div className="rounded-lg border bg-muted/20 p-4 text-xs text-muted-foreground space-y-2">
                   <div className="flex items-center justify-between">
@@ -552,6 +841,43 @@ export default function TaskDetailPage({
               size="sm"
               onClick={handleDeleteTask}
               isLoading={deleteLoading}
+            >
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Comment Confirmation Dialog */}
+      <Dialog
+        open={Boolean(commentToDelete)}
+        onOpenChange={(open) => {
+          if (!open) setCommentToDelete(null);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Comment</DialogTitle>
+            <DialogDescription className="text-xs">
+              Are you sure you want to delete this comment by{" "}
+              <strong>{commentToDelete?.authorName}</strong>? This action cannot be
+              undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCommentToDelete(null)}
+              disabled={deleteCommentLoading}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={handleDeleteComment}
+              isLoading={deleteCommentLoading}
             >
               Delete
             </Button>

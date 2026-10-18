@@ -136,9 +136,30 @@ export interface RegisterRequest {
   password: string;
 }
 
+export interface CommentView {
+  id: string;
+  taskId: string;
+  content: string;
+  authorId: string;
+  authorName: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CommentCreateRequest {
+  content: string;
+}
+
 export interface RealtimeEvent {
   eventId: string;
-  type: "task.created" | "task.updated" | "task.moved" | "task.deleted" | string;
+  type:
+    | "task.created"
+    | "task.updated"
+    | "task.moved"
+    | "task.deleted"
+    | "comment.created"
+    | "comment.deleted"
+    | string;
   workspaceId: string;
   projectId: string;
   resourceId: string;

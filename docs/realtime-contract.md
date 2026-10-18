@@ -13,7 +13,7 @@ Clients subscribe only after joining a workspace:
 | Destination | Authorized audience | Event kinds |
 | --- | --- | --- |
 | `/topic/workspaces/{workspaceId}` | Current workspace members | `project.changed`, `member.changed`, `activity.created` |
-| `/topic/projects/{projectId}` | Current project workspace members | `column.changed`, `task.changed`, `task.moved`, `comment.created` |
+| `/topic/projects/{projectId}` | Current project workspace members | `column.changed`, `task.changed`, `task.moved`, `comment.created`, `comment.deleted` |
 
 Every payload is a compact hint:
 
