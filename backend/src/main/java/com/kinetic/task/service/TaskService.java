@@ -23,6 +23,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import com.kinetic.activity.service.ActivityService;
+
 @Service
 public class TaskService {
 
@@ -32,6 +34,7 @@ public class TaskService {
     private final WorkspaceAccess access;
     private final AuthenticatedUser current;
     private final RealtimeEventPublisher eventPublisher;
+    private final ActivityService activityService;
 
     public TaskService(
             TaskRepository tasks,
@@ -39,7 +42,8 @@ public class TaskService {
             WorkspaceMembershipRepository memberships,
             WorkspaceAccess access,
             AuthenticatedUser current,
-            RealtimeEventPublisher eventPublisher
+            RealtimeEventPublisher eventPublisher,
+            ActivityService activityService
     ) {
         this.tasks = tasks;
         this.projects = projects;
@@ -47,6 +51,7 @@ public class TaskService {
         this.access = access;
         this.current = current;
         this.eventPublisher = eventPublisher;
+        this.activityService = activityService;
     }
 
     @Transactional
@@ -70,6 +75,15 @@ public class TaskService {
         );
         Task saved = tasks.saveAndFlush(task);
         eventPublisher.publish(RealtimeEvent.of("task.created", project.workspaceId(), projectId, saved.id(), saved.version()));
+        activityService.record(
+                project.workspaceId(),
+                current.id(),
+                "task.created",
+                "Created task \"" + saved.title() + "\"",
+                projectId,
+                saved.id(),
+                "{\"title\":\"" + escapeJson(saved.title()) + "\",\"priority\":\"" + saved.priority().name() + "\"}"
+        );
         return saved;
     }
 
@@ -108,6 +122,15 @@ public class TaskService {
         );
         Task saved = tasks.saveAndFlush(task);
         eventPublisher.publish(RealtimeEvent.of("task.updated", project.workspaceId(), project.id(), saved.id(), saved.version()));
+        activityService.record(
+                project.workspaceId(),
+                current.id(),
+                "task.updated",
+                "Updated task \"" + saved.title() + "\"",
+                project.id(),
+                saved.id(),
+                "{\"title\":\"" + escapeJson(saved.title()) + "\",\"priority\":\"" + saved.priority().name() + "\"}"
+        );
         return saved;
     }
 
@@ -156,6 +179,15 @@ public class TaskService {
 
         Task saved = tasks.saveAndFlush(task);
         eventPublisher.publish(RealtimeEvent.of("task.moved", project.workspaceId(), project.id(), saved.id(), saved.version()));
+        activityService.record(
+                project.workspaceId(),
+                current.id(),
+                "task.moved",
+                "Moved task \"" + saved.title() + "\"",
+                project.id(),
+                saved.id(),
+                "{\"title\":\"" + escapeJson(saved.title()) + "\",\"columnId\":\"" + targetColumnId + "\"}"
+        );
         return saved;
     }
 
@@ -178,6 +210,15 @@ public class TaskService {
         }
         tasks.saveAllAndFlush(remaining);
         eventPublisher.publish(RealtimeEvent.of("task.deleted", project.workspaceId(), project.id(), task.id(), null));
+        activityService.record(
+                project.workspaceId(),
+                current.id(),
+                "task.deleted",
+                "Deleted task \"" + task.title() + "\"",
+                project.id(),
+                task.id(),
+                "{\"title\":\"" + escapeJson(task.title()) + "\"}"
+        );
     }
 
     private void validateAssignee(UUID workspaceId, UUID assigneeId) {
@@ -185,5 +226,12 @@ public class TaskService {
             memberships.findByWorkspaceIdAndUserId(workspaceId, assigneeId)
                     .orElseThrow(() -> new NotFoundException("Assignee is not a member of the workspace"));
         }
+    }
+
+    private String escapeJson(String raw) {
+        if (raw == null) {
+            return "";
+        }
+        return raw.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r");
     }
 }

@@ -42,4 +42,22 @@ class FlywayMigrationIntegrationTest {
         );
         assertThat(versionCol).isEqualTo(1);
     }
+
+    @Test
+    void fourthMigrationCreatesWorkspaceActivitiesTable() {
+        Integer tableCount = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE LOWER(TABLE_NAME) = 'workspace_activities'",
+                Integer.class
+        );
+        assertThat(tableCount).isEqualTo(1);
+
+        for (String col : new String[]{"id", "workspace_id", "actor_id", "type", "description", "project_id", "task_id", "payload", "created_at"}) {
+            Integer colCount = jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE LOWER(TABLE_NAME) = 'workspace_activities' AND LOWER(COLUMN_NAME) = ?",
+                    Integer.class,
+                    col
+            );
+            assertThat(colCount).as("Column " + col + " should exist in workspace_activities").isEqualTo(1);
+        }
+    }
 }

@@ -73,6 +73,13 @@ Session-based authentication interface with BCrypt password hashing, automatic s
 - **Transactional Post-Commit Emission**: Events are dispatched exclusively via `@TransactionalEventListener(phase = AFTER_COMMIT)`, guaranteeing notifications are never emitted for rolled-back transactions.
 - **Zero-Dependency Resilient Client**: Native browser WebSocket client featuring automatic heartbeat monitoring, exponential backoff with jitter, and automatic REST resynchronization upon reconnect.
 
+### Workspace Audit Activity Feed and Export
+- **Persistent Activity Stream**: Records structured, immutable audit entries for task creation, updates, column moves, deletion, project creation, updates, and comments.
+- **Transactional Rollback Guarantees**: Activity records are committed inside the exact business transaction boundary, guaranteeing zero orphan events for aborted or invalid operations.
+- **Spreadsheet Formula Injection Defense**: CSV exports automatically neutralize executable spreadsheet triggers (`=`, `+`, `-`, `@`, `\t`, `\r`) through character prefix escaping, preventing formula injection vulnerabilities in spreadsheet software.
+- **CSV & JSON Export**: Workspace members can download deterministic, workspace-scoped audit trails directly from the workspace UI.
+- **Historical Record Preservation**: Audit log entries are retained even after referenced tasks or projects are deleted.
+
 ---
 
 ## 3. Technology Stack
@@ -252,7 +259,7 @@ Kinetic is deployed on cloud infrastructure using provider-managed environments:
 The codebase enforces strict test coverage across frontend and backend layers:
 
 ### Backend Testing (JUnit 5 & Spring Boot Test)
-- **69 tests passing** (0 failures, 0 errors).
+- **79 tests passing** (0 failures, 0 errors).
 - Covers REST API contracts, service-level authorization, sole-owner safety logic, Flyway migrations, and STOMP security interceptors.
 - CI executes all tests against a dedicated PostgreSQL 17 container using Testcontainers.
 
@@ -266,8 +273,8 @@ cd backend
 ```
 
 ### Frontend Testing (Vitest & React Testing Library)
-- **65 tests passing** across 18 test suites (0 failures).
-- Covers authentication flows, registration validation, board manipulation, optimistic concurrency conflict handling, STOMP reconnect logic, safe Markdown rendering, task comments, and UI components.
+- **71 tests passing** across 19 test suites (0 failures).
+- Covers authentication flows, registration validation, board manipulation, optimistic concurrency conflict handling, STOMP reconnect logic, safe Markdown rendering, task comments, workspace activity stream, and UI components.
 - Zero TypeScript compiler errors (`tsc --noEmit`).
 - Zero ESLint errors or warnings (`next lint`).
 
@@ -309,9 +316,9 @@ Every commit and pull request to `main` triggers automated GitHub Actions jobs:
 - [x] Optimistic locking with automatic conflict resolution prompts
 - [x] Same-origin Next.js proxy for strict cookie privacy compliance
 - [x] Task comments with safe Markdown preview and real-time thread synchronization
+- [x] Workspace audit activity stream and export (CSV & JSON)
 
 ### Planned Engineering Milestones
-- [ ] Workspace audit activity stream and export
 - [ ] Redis-backed STOMP relay for multi-instance horizontal scaling
 - [ ] Custom user avatars and workspace branding customization
 

@@ -29,7 +29,9 @@ Unsafe authenticated requests (`POST`, `PATCH`, `PUT`, `DELETE`) require the CSR
 | `POST /tasks/{taskId}/move` | Atomically move/reorder task | Editor+ |
 | `GET/POST /tasks/{taskId}/comments` | List/create comments | Member / editor+ |
 | `PATCH/DELETE /comments/{commentId}` | Edit/delete own comment | Author (owner may delete) |
-| `GET /workspaces/{workspaceId}/activity` | Paginated activity feed | Member |
+| `GET /workspaces/{workspaceId}/activities` | Paginated activity feed | Member |
+| `GET /workspaces/{workspaceId}/activities/export/csv` | Download activity audit as CSV | Member |
+| `GET /workspaces/{workspaceId}/activities/export/json` | Download activity audit as JSON | Member |
 | `GET /workspaces/{workspaceId}/sync` | Authoritative changed-resource snapshot | Member |
 
 `editor+` means `OWNER`, `ADMIN`, or `MEMBER` in the initial model. Fine-grained workspace permission checks are applied in the service layer after resolving membership from the resource's workspace; a guessed ID alone never grants access. Deletion is archival where history/references matter.

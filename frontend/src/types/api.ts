@@ -150,6 +150,19 @@ export interface CommentCreateRequest {
   content: string;
 }
 
+export interface ActivityView {
+  id: string;
+  workspaceId: string;
+  actorId: string | null;
+  actorName: string;
+  type: string;
+  description: string;
+  projectId: string | null;
+  taskId: string | null;
+  payload: string | null;
+  createdAt: string;
+}
+
 export interface RealtimeEvent {
   eventId: string;
   type:
@@ -159,6 +172,7 @@ export interface RealtimeEvent {
     | "task.deleted"
     | "comment.created"
     | "comment.deleted"
+    | "activity.created"
     | string;
   workspaceId: string;
   projectId: string;
@@ -166,4 +180,3 @@ export interface RealtimeEvent {
   version: number | null;
   occurredAt: string;
 }
-

@@ -21,6 +21,7 @@ import {
   TaskMoveRequest,
   CommentView,
   CommentCreateRequest,
+  ActivityView,
 } from "@/types/api";
 
 export function getApiBaseUrl(): string {
@@ -273,4 +274,15 @@ export const commentApi = {
     apiClient<void>(`/comments/${id}`, {
       method: "DELETE",
     }),
+};
+
+export const activityApi = {
+  list: (workspaceId: string, page = 0, size = 20) =>
+    apiClient<PageResponse<ActivityView>>(
+      `/workspaces/${workspaceId}/activities?page=${page}&size=${size}`
+    ),
+  exportCsv: (workspaceId: string) =>
+    apiClient<string>(`/workspaces/${workspaceId}/activities/export/csv`),
+  exportJson: (workspaceId: string) =>
+    apiClient<ActivityView[]>(`/workspaces/${workspaceId}/activities/export/json`),
 };

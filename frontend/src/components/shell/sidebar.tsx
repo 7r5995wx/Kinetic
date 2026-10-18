@@ -56,7 +56,17 @@ export function Sidebar({
         activeWorkspaceId &&
         currentPath.startsWith(`/workspaces/${activeWorkspaceId}`) &&
         !currentPath.includes("/settings") &&
+        !currentPath.includes("/activity") &&
         !currentPath.includes("/board"),
+      show: Boolean(activeWorkspaceId),
+    },
+    {
+      name: "Activity",
+      href: activeWorkspaceId
+        ? `/workspaces/${activeWorkspaceId}/activity`
+        : "/dashboard",
+      icon: Activity,
+      current: currentPath.includes("/activity"),
       show: Boolean(activeWorkspaceId),
     },
     {

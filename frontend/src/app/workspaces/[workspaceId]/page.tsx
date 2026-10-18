@@ -11,6 +11,7 @@ import {
   Trash2,
   RefreshCw,
   Clock,
+  Activity,
 } from "lucide-react";
 import { AppShell } from "@/components/shell/app-shell";
 import { Button } from "@/components/ui/button";
@@ -180,6 +181,12 @@ export default function WorkspaceOverviewPage({
               <RefreshCw
                 className={`h-4 w-4 ${loading ? "animate-spin" : ""}`}
               />
+            </Button>
+            <Button variant="outline" size="sm" asChild>
+              <Link href={`/workspaces/${params.workspaceId}/activity`}>
+                <Activity className="mr-1.5 h-4 w-4" />
+                Activity
+              </Link>
             </Button>
             <Button variant="outline" size="sm" asChild>
               <Link href={`/workspaces/${params.workspaceId}/settings`}>

@@ -27,6 +27,8 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import com.kinetic.activity.service.ActivityService;
+
 @Service
 public class CommentService {
 
@@ -37,6 +39,7 @@ public class CommentService {
     private final UserAccountRepository users;
     private final AuthenticatedUser current;
     private final RealtimeEventPublisher eventPublisher;
+    private final ActivityService activityService;
 
     public CommentService(
             CommentRepository comments,
@@ -45,7 +48,8 @@ public class CommentService {
             WorkspaceAccess access,
             UserAccountRepository users,
             AuthenticatedUser current,
-            RealtimeEventPublisher eventPublisher
+            RealtimeEventPublisher eventPublisher,
+            ActivityService activityService
     ) {
         this.comments = comments;
         this.tasks = tasks;
@@ -54,6 +58,7 @@ public class CommentService {
         this.users = users;
         this.current = current;
         this.eventPublisher = eventPublisher;
+        this.activityService = activityService;
     }
 
     @Transactional
@@ -67,12 +72,28 @@ public class CommentService {
         Comment saved = comments.saveAndFlush(comment);
 
         eventPublisher.publish(RealtimeEvent.of("comment.created", project.workspaceId(), project.id(), saved.id(), null));
+        activityService.record(
+                project.workspaceId(),
+                current.id(),
+                "comment.created",
+                "Commented on task \"" + task.title() + "\"",
+                project.id(),
+                task.id(),
+                "{\"taskTitle\":\"" + escapeJson(task.title()) + "\"}"
+        );
 
         String authorName = users.findById(current.id())
                 .map(UserAccount::displayName)
                 .orElse("Member");
 
         return CommentDtos.View.of(saved, authorName);
+    }
+
+    private String escapeJson(String raw) {
+        if (raw == null) {
+            return "";
+        }
+        return raw.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r");
     }
 
     @Transactional(readOnly = true)

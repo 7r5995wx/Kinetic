@@ -18,6 +18,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.UUID;
 
+import com.kinetic.activity.service.ActivityService;
+
 @Service
 public class ProjectService {
 
@@ -26,19 +28,22 @@ public class ProjectService {
     private final TaskRepository tasks;
     private final WorkspaceAccess access;
     private final AuthenticatedUser current;
+    private final ActivityService activityService;
 
     public ProjectService(
             ProjectRepository projects,
             KanbanColumnRepository columns,
             TaskRepository tasks,
             WorkspaceAccess access,
-            AuthenticatedUser current
+            AuthenticatedUser current,
+            ActivityService activityService
     ) {
         this.projects = projects;
         this.columns = columns;
         this.tasks = tasks;
         this.access = access;
         this.current = current;
+        this.activityService = activityService;
     }
 
     @Transactional
@@ -55,6 +60,15 @@ public class ProjectService {
                 KanbanColumn.create(project.id(), "In progress", 1),
                 KanbanColumn.create(project.id(), "Done", 2)
         ));
+        activityService.record(
+                workspaceId,
+                current.id(),
+                "project.created",
+                "Created project \"" + project.name() + "\"",
+                project.id(),
+                null,
+                "{\"name\":\"" + escapeJson(project.name()) + "\"}"
+        );
         return project;
     }
 
@@ -76,6 +90,15 @@ public class ProjectService {
         Project project = get(id);
         access.require(project.workspaceId(), current.id(), WorkspaceRole.OWNER, WorkspaceRole.ADMIN);
         project.update(request.name().trim(), request.description());
+        activityService.record(
+                project.workspaceId(),
+                current.id(),
+                "project.updated",
+                "Updated project \"" + project.name() + "\"",
+                project.id(),
+                null,
+                "{\"name\":\"" + escapeJson(project.name()) + "\"}"
+        );
         return project;
     }
 
@@ -86,6 +109,22 @@ public class ProjectService {
         tasks.deleteAllByProjectId(id);
         columns.deleteAllByProjectId(id);
         projects.delete(project);
+        activityService.record(
+                project.workspaceId(),
+                current.id(),
+                "project.deleted",
+                "Deleted project \"" + project.name() + "\"",
+                project.id(),
+                null,
+                "{\"name\":\"" + escapeJson(project.name()) + "\"}"
+        );
+    }
+
+    private String escapeJson(String raw) {
+        if (raw == null) {
+            return "";
+        }
+        return raw.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r");
     }
 
     @Transactional(readOnly = true)

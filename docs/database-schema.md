@@ -24,8 +24,8 @@ workspaces 1 ── * activity_events
 | `projects` | `id`, `workspace_id`, `name`, optional `description`, `archived_at`, `created_by`, timestamps. |
 | `kanban_columns` | `id`, `project_id`, `name`, `position`, `archived_at`; unique active logical ordering per project. |
 | `tasks` | `id`, `project_id`, `column_id`, `title`, `description`, `priority`, nullable `assignee_id`, nullable `due_date`, `position`, `version`, `created_by`, `archived_at`, timestamps. |
-| `comments` | `id`, `task_id`, `author_id`, `body`, `edited_at`, `deleted_at`, timestamps. |
-| `activity_events` | `id`, `workspace_id`, nullable `project_id`/`task_id`, `actor_id`, `type`, JSONB `metadata`, `created_at`; append-only. |
+| `task_comments` | `id`, `task_id` (CASCADE), `author_id` (FK users), `content`, timestamps; deterministic `(task_id, created_at, id)` index. |
+| `workspace_activities` | `id`, `workspace_id` (CASCADE), nullable `actor_id` (SET NULL), `type`, `description`, nullable `project_id`, nullable `task_id`, `payload`, `created_at`; deterministic `(workspace_id, created_at DESC, id DESC)` index. |
 
 ## Indexes
 
